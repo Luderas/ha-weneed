@@ -25,7 +25,7 @@ Integrates seamlessly with **Home Assistant Assist**, **Alexa**, and **Google As
 2. Click the **3 dots** (top right corner) and select **Custom repositories**.
 3. Add your repository URL:
    ```
-   https://github.com/<your-username>/ha-weneed
+   https://github.com/Luderas/ha-weneed
    ```
 4. Set Type to **Integration** and click **Add**.
 5. Find **WeNeed Shopping List** in HACS and click **Download**.
