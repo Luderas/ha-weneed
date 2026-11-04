@@ -1,0 +1,28 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "WeNeed Shopping List",
+        "description": "Log in with your WeNeed account (app.weneed.ch).",
+        "data": {
+          "email": "Email",
+          "password": "Password"
+        }
+      },
+      "select_list": {
+        "title": "Select Shopping List",
+        "description": "Choose which shopping list you want to connect to Home Assistant.",
+        "data": {
+          "list_id": "Shopping List",
+          "list_name": "List Name"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Authentication failed. Please check your email and password."
+    },
+    "abort": {
+      "already_configured": "This shopping list is already configured."
+    }
+  }
+}

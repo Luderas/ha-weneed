@@ -1,0 +1,28 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "WeNeed Einkaufsliste",
+        "description": "Melde dich mit deinem WeNeed-Konto (app.weneed.ch) an.",
+        "data": {
+          "email": "E-Mail-Adresse",
+          "password": "Passwort"
+        }
+      },
+      "select_list": {
+        "title": "Einkaufsliste auswählen",
+        "description": "Wähle die Einkaufsliste aus, die du mit Home Assistant verbinden möchtest.",
+        "data": {
+          "list_id": "Einkaufsliste",
+          "list_name": "Name der Liste"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Anmeldung fehlgeschlagen. Bitte prüfe E-Mail und Passwort."
+    },
+    "abort": {
+      "already_configured": "Diese Einkaufsliste ist bereits eingerichtet."
+    }
+  }
+}
