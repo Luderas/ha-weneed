@@ -20,7 +20,7 @@ Integrates seamlessly with **Home Assistant Assist**, **Alexa**, and **Google As
 ---
 
 ## 📦 Installation via HACS
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?category=integration&repository=ha.weneed&owner=Luderas)
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?category=integration&repository=ha-weneed&owner=Luderas)
 
 1. Open **HACS** in your Home Assistant.
 2. Click the **3 dots** (top right corner) and select **Custom repositories**.
