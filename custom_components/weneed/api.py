@@ -20,6 +20,8 @@ class WeNeedApi:
         self._id_token = None
         self._token_expiry = datetime.min.replace(tzinfo=timezone.utc)
         self._user_id = None
+        # Persistent session to reuse TCP/TLS connections
+        self._session = requests.Session()
 
     @property
     def list_id(self) -> str | None:
@@ -43,7 +45,7 @@ class WeNeedApi:
             "password": self._password,
             "returnSecureToken": True,
         }
-        res = requests.post(url, json=payload, timeout=10)
+        res = self._session.post(url, json=payload, timeout=10)
         if res.status_code != 200:
             raise ValueError(f"Authentication failed: {res.text}")
 
@@ -64,7 +66,6 @@ class WeNeedApi:
 
         lists = {}
 
-        # 1. Query lists where user is owner
         query_owner = {
             "structuredQuery": {
                 "from": [{"collectionId": "v2_shoppingLists"}],
@@ -77,7 +78,6 @@ class WeNeedApi:
                 },
             }
         }
-        # 2. Query lists where user is participant
         query_participant = {
             "structuredQuery": {
                 "from": [{"collectionId": "v2_shoppingLists"}],
@@ -93,7 +93,7 @@ class WeNeedApi:
 
         for q in [query_owner, query_participant]:
             try:
-                res = requests.post(url, headers=headers, json=q, timeout=10)
+                res = self._session.post(url, headers=headers, json=q, timeout=10)
                 if res.status_code == 200:
                     for row in res.json():
                         doc = row.get("document")
@@ -127,7 +127,7 @@ class WeNeedApi:
             f"https://firestore.googleapis.com/v1/projects/{PROJECT_ID}/databases/(default)/"
             f"documents/v2_shoppingLists/{self._list_id}/v2_shoppingListProducts?pageSize=300"
         )
-        res = requests.get(url, headers=headers, timeout=10)
+        res = self._session.get(url, headers=headers, timeout=10)
         res.raise_for_status()
 
         docs = res.json().get("documents", [])
@@ -157,8 +157,8 @@ class WeNeedApi:
 
         return items
 
-    def add_item(self, summary: str) -> None:
-        """Add a new item to the shopping list."""
+    def add_item(self, summary: str) -> str:
+        """Add a new item to the shopping list and return the generated ID."""
         if not self._list_id:
             raise ValueError("No shopping list ID configured")
 
@@ -247,8 +247,9 @@ class WeNeedApi:
             f"https://firestore.googleapis.com/v1/projects/{PROJECT_ID}/databases/(default)/"
             f"documents/v2_shoppingLists/{self._list_id}/v2_shoppingListProducts?documentId={item_id}"
         )
-        res = requests.post(url, headers=headers, json=body, timeout=10)
+        res = self._session.post(url, headers=headers, json=body, timeout=10)
         res.raise_for_status()
+        return item_id
 
     def update_item_status(self, uid: str, checked: bool) -> None:
         """Mark an item as checked or unchecked."""
@@ -275,7 +276,7 @@ class WeNeedApi:
             f"https://firestore.googleapis.com/v1/projects/{PROJECT_ID}/databases/(default)/"
             f"documents/v2_shoppingLists/{self._list_id}/v2_shoppingListProducts/{uid}?updateMask.fieldPaths=data.checked"
         )
-        res = requests.patch(url, headers=headers, json=body, timeout=10)
+        res = self._session.patch(url, headers=headers, json=body, timeout=10)
         res.raise_for_status()
 
     def delete_item(self, uid: str) -> None:
@@ -289,5 +290,5 @@ class WeNeedApi:
             f"https://firestore.googleapis.com/v1/projects/{PROJECT_ID}/databases/(default)/"
             f"documents/v2_shoppingLists/{self._list_id}/v2_shoppingListProducts/{uid}"
         )
-        res = requests.delete(url, headers=headers, timeout=10)
+        res = self._session.delete(url, headers=headers, timeout=10)
         res.raise_for_status()

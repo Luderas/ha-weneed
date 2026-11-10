@@ -1,5 +1,6 @@
 """WeNeed TodoList entity for Home Assistant."""
 
+from datetime import timedelta
 import logging
 from homeassistant.components.todo import (
     TodoItem,
@@ -15,6 +16,9 @@ from .api import WeNeedApi
 from .const import DOMAIN, CONF_LIST_ID, CONF_LIST_NAME, DEFAULT_NAME
 
 _LOGGER = logging.getLogger(__name__)
+
+# Poll WeNeed every 20 seconds for external changes (e.g. from the mobile app)
+SCAN_INTERVAL = timedelta(seconds=20)
 
 
 async def async_setup_entry(
@@ -81,20 +85,39 @@ class WeNeedTodoListEntity(TodoListEntity):
             _LOGGER.error("Error updating WeNeed list: %s", err)
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
-        """Create a new item on the WeNeed list."""
-        await self.hass.async_add_executor_job(self._api.add_item, item.summary)
-        await self.async_update()
+        """Create a new item on the WeNeed list with fast optimistic response."""
+        item_id = await self.hass.async_add_executor_job(self._api.add_item, item.summary)
+        # Optimistically add item to local state for instant voice/UI response
+        self._todo_items.append(
+            TodoItem(
+                uid=item_id,
+                summary=item.summary,
+                status=TodoItemStatus.NEEDS_ACTION,
+            )
+        )
+        self.async_write_ha_state()
 
     async def async_update_todo_item(self, item: TodoItem) -> None:
-        """Update an item status (check / uncheck) on the WeNeed list."""
+        """Update an item status (check / uncheck) with optimistic response."""
+        # Optimistic update in memory
+        for idx, existing in enumerate(self._todo_items):
+            if existing.uid == item.uid:
+                self._todo_items[idx] = item
+                break
+        self.async_write_ha_state()
+
         is_completed = item.status == TodoItemStatus.COMPLETED
         await self.hass.async_add_executor_job(
             self._api.update_item_status, item.uid, is_completed
         )
-        await self.async_update()
 
     async def async_delete_todo_items(self, uids: list[str]) -> None:
-        """Delete items permanently from the WeNeed list."""
+        """Delete items permanently with optimistic response."""
+        # Optimistic deletion in memory
+        self._todo_items = [
+            item for item in self._todo_items if item.uid not in uids
+        ]
+        self.async_write_ha_state()
+
         for uid in uids:
             await self.hass.async_add_executor_job(self._api.delete_item, uid)
-        await self.async_update()
